@@ -6,8 +6,6 @@ from pyvis.network import Network
 import tempfile
 import json
 import fitz  # PyMuPDF
-import requests
-from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -65,31 +63,19 @@ def extract_text_from_pdf(uploaded_file):
     text = "\n".join(page.get_text() for page in doc)
     return text
 
-def extract_text_from_url(url):
-    try:
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.content, 'html.parser')
-        for script_or_style in soup(['script', 'style']):
-            script_or_style.decompose()
-        text = ' '.join(soup.stripped_strings)
-        return text
-    except Exception as e:
-        st.error(f"Failed to fetch or parse the URL: {e}")
-        return ""
-
 # Streamlit App
 st.set_page_config(page_title="Knowledge Graph Generator", layout="wide")
-st.title("🔗 Knowledge Representation Graph Generator")
+st.title("Knowledge Representation Graph Generator")
 st.markdown(
     """
     <div style='text-align: center; font-size:18px; color: #4B8BBE; font-weight: bold; margin-bottom: 20px;'>
-        👩‍💻 Made by: Muskan Agrawal (2306713)
+        Made by: Muskan Agrawal (2306713)
     </div>
     """,
     unsafe_allow_html=True
 )
 
-input_type = st.radio("Select Input Type", ["Text", "PDF File", "URL"])
+input_type = st.radio("Select Input Type", ["Text", "PDF File"])
 
 content = ""
 if input_type == "Text":
@@ -98,10 +84,6 @@ elif input_type == "PDF File":
     uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
     if uploaded_file:
         content = extract_text_from_pdf(uploaded_file)
-elif input_type == "URL":
-    url = st.text_input("Enter a URL")
-    if url:
-        content = extract_text_from_url(url)
 
 if st.button("Generate Knowledge Graph"):
     if not content.strip():
@@ -118,4 +100,4 @@ if st.button("Generate Knowledge Graph"):
                 st.success("Knowledge Graph Generated Successfully!")
                 st.components.v1.html(open(graph_path, 'r', encoding='utf-8').read(), height=600)
             else:
-                st.warning("No relationships found.")
+                st.warning("No meaningful relationships found.")
